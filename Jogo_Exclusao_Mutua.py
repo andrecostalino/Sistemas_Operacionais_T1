@@ -33,14 +33,16 @@ def replenish_ingredients():
             ingredient_stock[ingredient] = MAX_INGREDIENTS
         print("Ingredientes reabastecidos.")
 
-def collect_ingredient(player_ingredients, ingredient):
+def collect_ingredient(player_ingredients, ingredient, player_id):
     """
     Função para coletar um ingrediente.
     """
     with ingredient_lock:
         if ingredient_stock[ingredient] > 0:
+            print(f"Jogador {player_id} está tentando coletar {ingredient}")
             player_ingredients[ingredient] += 1
             ingredient_stock[ingredient] -= 1
+            time.sleep(1)
             print(f"Jogador coletou {ingredient}. Estoque restante: {ingredient_stock[ingredient]}")
         else:
             print(f"Ingrediente {ingredient} está fora de estoque.")
@@ -70,7 +72,7 @@ def player_thread(player_id, player_ingredients, start_time):
     while time.time() - start_time < 30.0:
         # Simular coleta de ingredientes
         ingredient = random.choice(INGREDIENTS)
-        collect_ingredient(player_ingredients, ingredient)
+        collect_ingredient(player_ingredients, ingredient, player_id)
         # Tentar completar um pedido
         complete_order(player_id, player_ingredients)
         time.sleep(random.uniform(0.5, 1.5))  # Simular tempo de ação do jogador
@@ -90,7 +92,6 @@ def game():
     player2.start()
     
     while time.time() - start_time < 30.0:  # Executar o jogo por 5 minutos (300 segundos)
-        print(time.time() - start_time)
         time.sleep(ingredient_replenish_time)  # Esperar pelo tempo de reabastecimento
         replenish_ingredients()  # Reabastecer os ingredientes
     
