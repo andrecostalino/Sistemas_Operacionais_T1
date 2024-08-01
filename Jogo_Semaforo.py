@@ -13,13 +13,13 @@ class Semaforo:
     def captura(self):
         while True:
             self.espera_condicional()
-        if self.sinal > 0:
-            self.sinal -= 1
-            return
-        else:
-            self.threads.append(threading.current_thread())
-            while threading.current_thread() in self.threads:
-                time.sleep(0.01)
+            if self.sinal > 0:
+                self.sinal -= 1
+                return
+            else:
+                self.threads.append(threading.current_thread())
+                while threading.current_thread() in self.threads:
+                    time.sleep(0.01)
     def liberacao(self):
         self.sinal += 1
         if self.threads:
