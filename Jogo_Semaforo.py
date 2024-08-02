@@ -3,13 +3,16 @@ import time
 import random
 import collections
 
+#Classe Semáforo
 class Semaforo:
     def __init__(self, inicial):
         self.sinal = inicial
         self.threads = collections.deque()
+    #Espera pela liberação
     def espera_condicional(self):
         while self.sinal == 0:
             time.sleep(0.01)
+    #Captura do semáforo pela thread
     def captura(self):
         while True:
             self.espera_condicional()
@@ -20,23 +23,24 @@ class Semaforo:
                 self.threads.append(threading.current_thread())
                 while threading.current_thread() in self.threads:
                     time.sleep(0.01)
+    #Liberação do semáforo pela thread
     def liberacao(self):
         self.sinal += 1
         if self.threads:
             self.threads.popleft()
 
-# Definições de ingredientes e pedidos
-INGREDIENTS = ["Tomate", "Queijo", "Massa", "Carne", "Alface", "Pão"]
-MAX_INGREDIENTS = 5
-ingredient_stock = {ingredient: MAX_INGREDIENTS for ingredient in INGREDIENTS}  # Estoque inicial de cada ingrediente
-ingredient_replenish_time = 30  # Tempo em segundos para reabastecimento dos ingredientes
+#Possíveis pedidos
+Cardapio = [{"Burrito": ["Carne", "Queijo", "Feijao"]}, 
+           {"Hambúrguer": ["Pão", "Carne", "Alface"]}, 
+           {"Salada": ["Alface", "Tomate", "Queijo"]}]
 
-# Definições de pedidos
-ORDERS = [
-    {"Pizza": ["Massa", "Queijo", "Tomate"]},
-    {"Hambúrguer": ["Pão", "Carne", "Alface"]},
-    {"Salada": ["Alface", "Tomate", "Queijo"]}
-]
+# Definições de ingredientes e pedidos
+INGREDIENTS = ["Tomate", "Queijo", "Feijao", "Carne", "Alface", "Pão"]
+dispensa_cheia = 5
+dispensa = {ingredient: dispensa_cheia for ingredient in INGREDIENTS}  # Estoque inicial de cada ingrediente
+
+#Tempo para reposição dos ingredientes
+tempo_reposicao = 30  
 
 # Configurações dos jogadores
 player1_ingredients = {ingredient: 0 for ingredient in INGREDIENTS}  # Ingredientes coletados pelo Jogador 1
@@ -47,13 +51,13 @@ player_scores = [0, 0]  # Pontuações dos jogadores
 semaforo_ingredientes = Semaforo(1)
 semaforo_pontuacao = Semaforo(1)
 
-def replenish_ingredients():
+def reposicao():
     """
     Função para reabastecer os ingredientes.
     """
     semaforo_ingredientes.captura()
     for ingredient in INGREDIENTS:
-        ingredient_stock[ingredient] = MAX_INGREDIENTS
+        dispensa[ingredient] = dispensa_cheia
     print("Ingredientes reabastecidos.")
     semaforo_ingredientes.liberacao()
 
@@ -62,12 +66,12 @@ def collect_ingredient(player_ingredients, ingredient, player_id):
     Função para coletar um ingrediente.
     """
     semaforo_ingredientes.captura()
-    if ingredient_stock[ingredient] > 0:
+    if dispensa[ingredient] > 0:
         print(f"Jogador {player_id} está tentando coletar {ingredient}")
         player_ingredients[ingredient] += 1
-        ingredient_stock[ingredient] -= 1
+        dispensa[ingredient] -= 1
         time.sleep(1)
-        print(f"Jogador coletou {ingredient}. Estoque restante: {ingredient_stock[ingredient]}")
+        print(f"Jogador {player_id} coletou {ingredient}. Estoque restante: {dispensa[ingredient]}")
     else:
         print(f"Ingrediente {ingredient} está fora de estoque.")
     semaforo_ingredientes.liberacao()
@@ -76,7 +80,7 @@ def complete_order(player_id, player_ingredients):
     """
     Função para completar um pedido.
     """
-    order = random.choice(ORDERS)  # Escolhe um pedido aleatório
+    order = random.choice(Cardapio)  # Escolhe um pedido aleatório
     order_name = list(order.keys())[0]
     order_ingredients = order[order_name]
     
@@ -92,7 +96,7 @@ def player_thread(player_id, player_ingredients, start_time):
     """
     Thread que representa as ações de um jogador.
     """
-    while time.time() - start_time < 30.0:
+    while 5 not in player_scores:
         # Simular coleta de ingredientes
         ingredient = random.choice(INGREDIENTS)
         collect_ingredient(player_ingredients, ingredient, player_id)
@@ -114,12 +118,12 @@ def game():
     player1.start()
     player2.start()
     
-    while time.time() - start_time < 30.0:  # Executar o jogo por 5 minutos (300 segundos)
-        time.sleep(ingredient_replenish_time)  # Esperar pelo tempo de reabastecimento
-        replenish_ingredients()  # Reabastecer os ingredientes
+    while 5 not in player_scores:  # Executar o jogo por 5 minutos (300 segundos)
+        time.sleep(tempo_reposicao)  # Esperar pelo tempo de reabastecimento
+        reposicao()  # Reabastecer os ingredientes
     
-    #player1.join()  # Esperar a thread do jogador 1 terminar
-    #player2.join()  # Esperar a thread do jogador 2 terminar
+    player1.join()  # Esperar a thread do jogador 1 terminar
+    player2.join()  # Esperar a thread do jogador 2 terminar
     
     print("Fim do jogo")
     print(f"Pontuação do Jogador 1: {player_scores[0]}")

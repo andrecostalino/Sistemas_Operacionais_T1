@@ -2,6 +2,22 @@ import threading
 import time
 import random
 
+#Classe Monitor
+class Monitor:
+    def __init__(self):
+        self.ocupado = False
+        self.monitor = threading.Condition()
+    #Funções de captura e liberação da classe monitor
+    def captura(self):
+        with self.monitor:
+            while self.ocupado:
+                self.monitor.wait()
+            self.ocupado = True
+    def liberacao(self):
+        with self.monitor:
+            self.ocupado = False
+            self.monitor.notify()
+
 # Definições de ingredientes e pedidos
 INGREDIENTS = ["Tomate", "Queijo", "Massa", "Carne", "Alface", "Pão"]
 MAX_INGREDIENTS = 5
@@ -21,31 +37,33 @@ player2_ingredients = {ingredient: 0 for ingredient in INGREDIENTS}  # Ingredien
 player_scores = [0, 0]  # Pontuações dos jogadores
 
 # Lock para controlar acesso aos ingredientes
-ingredient_lock = threading.Lock()
-score_lock = threading.Lock()
+ingredientes_monitor = Monitor()
+pontuacao_monitor = Monitor()
 
 def replenish_ingredients():
     """
     Função para reabastecer os ingredientes.
     """
-    with ingredient_lock:
-        for ingredient in INGREDIENTS:
-            ingredient_stock[ingredient] = MAX_INGREDIENTS
-        print("Ingredientes reabastecidos.")
+    ingredientes_monitor.captura()
+    for ingredient in INGREDIENTS:
+        ingredient_stock[ingredient] = MAX_INGREDIENTS
+    print("Ingredientes reabastecidos.")
+    ingredientes_monitor.liberacao()
 
 def collect_ingredient(player_ingredients, ingredient, player_id):
     """
     Função para coletar um ingrediente.
     """
-    with ingredient_lock:
-        if ingredient_stock[ingredient] > 0:
-            print(f"Jogador {player_id} está tentando coletar {ingredient}")
-            player_ingredients[ingredient] += 1
-            ingredient_stock[ingredient] -= 1
-            time.sleep(1)
-            print(f"Jogador coletou {ingredient}. Estoque restante: {ingredient_stock[ingredient]}")
-        else:
-            print(f"Ingrediente {ingredient} está fora de estoque.")
+    ingredientes_monitor.captura()
+    if ingredient_stock[ingredient] > 0:
+        print(f"Jogador {player_id} está tentando coletar {ingredient}")
+        player_ingredients[ingredient] += 1
+        ingredient_stock[ingredient] -= 1
+        time.sleep(1)
+        print(f"Jogador coletou {ingredient}. Estoque restante: {ingredient_stock[ingredient]}")
+    else:
+        print(f"Ingrediente {ingredient} está fora de estoque.")
+    ingredientes_monitor.liberacao()
 
 def complete_order(player_id, player_ingredients):
     """
@@ -55,21 +73,19 @@ def complete_order(player_id, player_ingredients):
     order_name = list(order.keys())[0]
     order_ingredients = order[order_name]
     
-    with score_lock:
-        # Verifica se o jogador tem todos os ingredientes necessários
-        if all(player_ingredients[ingredient] > 0 for ingredient in order_ingredients):
-            for ingredient in order_ingredients:
-                player_ingredients[ingredient] -= 1  # Remove os ingredientes usados
-            player_scores[player_id - 1] += 1  # Incrementa a pontuação do jogador
-            print(f"Jogador {player_id} completou um pedido de {order_name}! Pontuação: {player_scores[player_id - 1]}")
-        #else:
-            #print(f"Jogador {player_id} não tem ingredientes suficientes para completar um pedido de {order_name}.")
+    pontuacao_monitor.captura()
+    if all(player_ingredients[ingredient] > 0 for ingredient in order_ingredients):
+        for ingredient in order_ingredients:
+            player_ingredients[ingredient] -= 1  # Remove os ingredientes usados
+        player_scores[player_id - 1] += 1  # Incrementa a pontuação do jogador
+        print(f"Jogador {player_id} completou um pedido de {order_name}! Pontuação: {player_scores[player_id - 1]}")
+    pontuacao_monitor.liberacao()
 
 def player_thread(player_id, player_ingredients, start_time):
     """
     Thread que representa as ações de um jogador.
     """
-    while 5 not in player_scores:
+    while time.time() - start_time < 30.0:
         # Simular coleta de ingredientes
         ingredient = random.choice(INGREDIENTS)
         collect_ingredient(player_ingredients, ingredient, player_id)
@@ -91,12 +107,12 @@ def game():
     player1.start()
     player2.start()
     
-    while 5 not in player_scores:  # Executar o jogo por 5 minutos (300 segundos)
+    while time.time() - start_time < 30.0:  # Executar o jogo por 5 minutos (300 segundos)
         time.sleep(ingredient_replenish_time)  # Esperar pelo tempo de reabastecimento
         replenish_ingredients()  # Reabastecer os ingredientes
     
-    player1.join()  # Esperar a thread do jogador 1 terminar
-    player2.join()  # Esperar a thread do jogador 2 terminar
+    #player1.join()  # Esperar a thread do jogador 1 terminar
+    #player2.join()  # Esperar a thread do jogador 2 terminar
     
     print("Fim do jogo")
     print(f"Pontuação do Jogador 1: {player_scores[0]}")
