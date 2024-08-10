@@ -3,6 +3,10 @@ import time
 import random
 import collections
 
+file = open("Script_Ingredientes.txt", "r")
+script_ingredientes = file.readlines()
+file.close()
+
 #Classe Semáforo
 class Semaforo:
     def __init__(self, inicial):
@@ -31,11 +35,11 @@ class Semaforo:
 
 #Possíveis pedidos
 Cardapio = [{"Burrito": ["Carne", "Queijo", "Feijao"]}, 
-           {"Hambúrguer": ["Pão", "Carne", "Alface"]}, 
+           {"Hambúrguer": ["Pao", "Carne", "Alface"]}, 
            {"Salada": ["Alface", "Tomate", "Queijo"]}]
 
 # Definições de ingredientes e pedidos
-Ingredientes = ["Tomate", "Queijo", "Feijao", "Carne", "Alface", "Pão"]
+Ingredientes = ["Tomate", "Queijo", "Feijao", "Carne", "Alface", "Pao"]
 dispensa_cheia = 5
 dispensa = {ingrediente: dispensa_cheia for ingrediente in Ingredientes}  # Estoque inicial de cada ingrediente
 
@@ -72,9 +76,8 @@ def coleta_ingrediente(ingredientes_player, ingrediente, id_jogador):
         print(f"Ingrediente {ingrediente} está fora de estoque.")
     semaforo_ingredientes.liberacao()
 
-def completar_pedido(id_jogador, ingredientes_player):
-    #Completar pedido
-    pedido = random.choice(Cardapio)  # Escolhe um pedido aleatório
+def completar_pedido(id_jogador, ingredientes_player, escolha_pedido):
+    pedido = Cardapio[escolha_pedido]  # Escolhe um pedido aleatório
     nome_pedido = list(pedido.keys())[0]
     ingrediente_pedido = pedido[nome_pedido]
     
@@ -88,17 +91,26 @@ def completar_pedido(id_jogador, ingredientes_player):
 
 def thread_jogador(id_jogador, ingredientes_player):
     #Thread jogador
+    ls_ingrediente = 0
+    ls_pedidos = 0
     while True:
         # Simular coleta de ingredientes
-        ingrediente = random.choice(Ingredientes)
+        ingrediente = script_ingredientes[ls_ingrediente].rstrip('\n')
+        ls_ingrediente += 1
         coleta_ingrediente(ingredientes_player, ingrediente, id_jogador)
         # Tentar completar um pedido
-        completar_pedido(id_jogador, ingredientes_player)
-        time.sleep(0.1)  # Simular tempo de ação do jogador
         if 3 in pontuacao_jogadores:
             break
+        completar_pedido(id_jogador, ingredientes_player, ls_pedidos)
+        if ls_pedidos <= 1:
+            ls_pedidos += 1
+        else:
+            ls_pedidos = 0
+        time.sleep(0.1)  # Simular tempo de ação do jogador
 
 def game():
+    #Cronometragem do jogo
+    inicio_cronometro = time.time()
 
     # Iniciar threads dos jogadores
     player1 = threading.Thread(target=thread_jogador, args=(1, ingredientes_player1))
@@ -121,6 +133,8 @@ def game():
     print(f"Pontuação do Jogador 2: {pontuacao_jogadores[1]}")
     print(f"Inventário do Jogador 1: {ingredientes_player1}")
     print(f"Inventário do Jogador 2: {ingredientes_player2}")
+    fim_cronometro = time.time()
+    print(f"Finalizado após {fim_cronometro - inicio_cronometro} segundos")
 
 if __name__ == "__main__":
     game()
