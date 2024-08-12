@@ -2,6 +2,11 @@ import threading
 import time
 import random
 
+#Leitura do script dos ingredientes
+file = open("Script_Ingredientes.txt", "r")
+script_ingredientes = file.readlines()
+file.close()
+
 #Classe Monitor
 class Monitor:
     def __init__(self):
@@ -21,15 +26,15 @@ class Monitor:
 # Definições de pedidos
 Cardapio = [
     {"Burrito": ["Feijao", "Queijo", "Tomate"]},
-    {"Hambúrguer": ["Pão", "Carne", "Alface"]},
+    {"Hambúrguer": ["Pao", "Carne", "Alface"]},
     {"Salada": ["Alface", "Tomate", "Queijo"]}
 ]
 
 #Tempo reposição pedidos
-tempo_reposicao = 30 
+tempo_reposicao = 20
 
 # Definições de ingredientes e pedidos
-Ingredientes = ["Tomate", "Queijo", "Feijao", "Carne", "Alface", "Pão"]
+Ingredientes = ["Tomate", "Queijo", "Feijao", "Carne", "Alface", "Pao"]
 dispensa_cheia = 5
 dispensa = {ingrediente: dispensa_cheia for ingrediente in Ingredientes}  # Estoque inicial de cada ingrediente
 
@@ -38,12 +43,12 @@ ingredientes_player1 = {ingrediente: 0 for ingrediente in Ingredientes}  # Ingre
 ingredientes_player2 = {ingrediente: 0 for ingrediente in Ingredientes}  # Ingredientes coletados pelo Jogador 2
 pontuacao_jogadores = [0, 0]  # Pontuações dos jogadores
 
-# Lock para controlar acesso aos ingredientes
+# Monitores para controlar acesso aos ingredientes
 monitor_ingredientes = Monitor()
 monitor_pontuacao = Monitor()
 
 def reposicao():
-    #Reabastecimento dos ingredientes
+    # Reabastecimento dos ingredientes (Neste momento a dispensa também é regulada por um semáforo)
     monitor_ingredientes.captura()
     for ingrediente in Ingredientes:
         dispensa[ingrediente] = dispensa_cheia
@@ -51,7 +56,8 @@ def reposicao():
     monitor_ingredientes.liberacao()
 
 def coleta_ingredientes(ingredientes_jogador, ingrediente, id_jogador):
-    #Coleta ingredientes
+    """Os jogadores adicionam uma unidade de um ingrediente em específico a sua dispensa,
+    tendo uma sinalização posterior disso."""
     monitor_ingredientes.captura()
     if dispensa[ingrediente] > 0:
         print(f"Jogador {id_jogador} está tentando coletar {ingrediente}")
@@ -60,16 +66,17 @@ def coleta_ingredientes(ingredientes_jogador, ingrediente, id_jogador):
         time.sleep(1)
         print(f"Jogador coletou {ingrediente}. Estoque restante: {dispensa[ingrediente]}")
     else:
+        # Caso não haja ingrediente disponível ele sinaliza nos logs
         print(f"Ingrediente {ingrediente} está fora de estoque.")
     monitor_ingredientes.liberacao()
 
-def completar_pedido(id_jogador, ingredientes_jogador):
-    #Completar pedido
-    pedido = random.choice(Cardapio)  # Escolhe um pedido aleatório
+def completar_pedido(id_jogador, ingredientes_jogador, escolha_pedido):
+    pedido = Cardapio[escolha_pedido]  # Seleciona um pedido baseando-se num script pré-determinado
     nome_pedido = list(pedido.keys())[0]
     ingredientes_pedido = pedido[nome_pedido]
     
-    monitor_pontuacao.captura()
+    monitor_pontuacao.captura() # A lista de pontuações também é considerada uma região crítica
+    # Verifica se o jogador tem todos os ingredientes necessários
     if all(ingredientes_jogador[ingrediente] > 0 for ingrediente in ingredientes_pedido):
         for ingrediente in ingredientes_pedido:
             ingredientes_jogador[ingrediente] -= 1  # Remove os ingredientes usados
@@ -79,15 +86,27 @@ def completar_pedido(id_jogador, ingredientes_jogador):
 
 def thread_jogador(id_jogador, ingredientes_jogador):
     #Thread jogador
-    while 5 not in pontuacao_jogadores:
+    ls_ingrediente = 0
+    ls_pedidos = 0
+    while True:
         # Simular coleta de ingredientes
-        ingrediente = random.choice(Ingredientes)
+        ingrediente = script_ingredientes[ls_ingrediente].rstrip('\n')
+        ls_ingrediente += 1
         coleta_ingredientes(ingredientes_jogador, ingrediente, id_jogador)
+        if 3 in pontuacao_jogadores:
+            break
         # Tentar completar um pedido
-        completar_pedido(id_jogador, ingredientes_jogador)
-        time.sleep(random.uniform(0.5, 1.5))  # Simular tempo de ação do jogador
+        completar_pedido(id_jogador, ingredientes_jogador, ls_pedidos)
+        if ls_pedidos <= 1:
+            ls_pedidos += 1
+        else:
+            ls_pedidos = 0
+        time.sleep(0.1)  # Simular tempo de ação do jogador
 
 def game():
+    #Cronometragem do jogo
+    inicio_cronometro = time.time()
+    inicio_cronometro_reposicao = time.time()
     
     # Iniciar threads dos jogadores
     player1 = threading.Thread(target=thread_jogador, args=(1, ingredientes_player1))
@@ -96,9 +115,13 @@ def game():
     player1.start()
     player2.start()
     
-    while 5 not in pontuacao_jogadores:  # Executar o jogo por 5 minutos (300 segundos)
-        time.sleep(tempo_reposicao)  # Esperar pelo tempo de reabastecimento
-        reposicao()  # Reabastecer os ingredientes
+    while True:  
+        cronometro_reposicao = time.time()
+        if cronometro_reposicao - inicio_cronometro_reposicao >= tempo_reposicao:
+            reposicao()  # Reabastecer os ingredientes]
+            inicio_cronometro_reposicao = cronometro_reposicao
+        if 3 in pontuacao_jogadores: # Encerra o jogo quando um jogador completa 3 pedidos
+            break
     
     player1.join()  # Esperar a thread do jogador 1 terminar
     player2.join()  # Esperar a thread do jogador 2 terminar
@@ -108,6 +131,8 @@ def game():
     print(f"Pontuação do Jogador 2: {pontuacao_jogadores[1]}")
     print(f"Inventário do Jogador 1: {ingredientes_player1}")
     print(f"Inventário do Jogador 2: {ingredientes_player2}")
+    fim_cronometro = time.time()
+    print(f"Finalizado após {fim_cronometro - inicio_cronometro} segundos")
 
 if __name__ == "__main__":
     game()
