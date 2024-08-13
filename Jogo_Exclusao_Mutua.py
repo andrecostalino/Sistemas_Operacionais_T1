@@ -9,7 +9,7 @@ file.close()
 
 # Definições de pedidos
 Cardapio = [
-    {"Burrito": ["Feijao", "Queijo", "Tomate"]},
+    {"Burrito": ["Feijao", "Queijo", "Carne"]},
     {"Hambúrguer": ["Pao", "Carne", "Alface"]},
     {"Salada": ["Alface", "Tomate", "Queijo"]}
 ]
