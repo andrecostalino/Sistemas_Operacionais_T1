@@ -58,13 +58,14 @@ def reposicao():
 def coleta_ingredientes(ingredientes_jogador, ingrediente, id_jogador):
     """Os jogadores adicionam uma unidade de um ingrediente em específico a sua dispensa,
     tendo uma sinalização posterior disso."""
+    print(f"Jogador {id_jogador} está aguardando a liberação da dispensa")
     monitor_ingredientes.captura()
     if dispensa[ingrediente] > 0:
         print(f"Jogador {id_jogador} está tentando coletar {ingrediente}")
         ingredientes_jogador[ingrediente] += 1
         dispensa[ingrediente] -= 1
         time.sleep(1)
-        print(f"Jogador coletou {ingrediente}. Estoque restante: {dispensa[ingrediente]}")
+        print(f"Jogador {id_jogador} coletou {ingrediente}. Estoque restante: {dispensa[ingrediente]}")
     else:
         # Caso não haja ingrediente disponível ele sinaliza nos logs
         print(f"Ingrediente {ingrediente} está fora de estoque.")
@@ -75,6 +76,7 @@ def completar_pedido(id_jogador, ingredientes_jogador, escolha_pedido):
     nome_pedido = list(pedido.keys())[0]
     ingredientes_pedido = pedido[nome_pedido]
     
+    print(f"O jogador {id_jogador} está tentando acessar a tabela de pontuação")
     monitor_pontuacao.captura() # A lista de pontuações também é considerada uma região crítica
     # Verifica se o jogador tem todos os ingredientes necessários
     if all(ingredientes_jogador[ingrediente] > 0 for ingrediente in ingredientes_pedido):

@@ -67,6 +67,7 @@ def reposicao():
 def coleta_ingrediente(ingredientes_player, ingrediente, id_jogador):
     """Os jogadores adicionam uma unidade de um ingrediente em específico a sua dispensa,
     tendo uma sinalização posterior disso."""
+    print(f"Jogador {id_jogador} está aguardando a liberação da dispensa")
     semaforo_ingredientes.captura()
     if dispensa[ingrediente] > 0:
         print(f"Jogador {id_jogador} está tentando coletar {ingrediente}")
@@ -84,6 +85,7 @@ def completar_pedido(id_jogador, ingredientes_player, escolha_pedido):
     nome_pedido = list(pedido.keys())[0]
     ingrediente_pedido = pedido[nome_pedido]
     
+    print(f"O jogador {id_jogador} está tentando acessar a tabela de pontuação")
     semaforo_pontuacao.captura() # A lista de pontuações também é considerada uma região crítica
     # Verifica se o jogador tem todos os ingredientes necessários
     if all(ingredientes_player[ingrediente] > 0 for ingrediente in ingrediente_pedido):
