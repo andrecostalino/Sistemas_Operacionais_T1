@@ -1,6 +1,5 @@
 import threading
 import time
-import random
 
 #Leitura do script dos ingredientes
 file = open("Script_Ingredientes.txt", "r")

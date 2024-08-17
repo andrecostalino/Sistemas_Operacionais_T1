@@ -1,6 +1,5 @@
 import threading
 import time
-import random
 import collections
 
 #Leitura do script dos ingredientes
