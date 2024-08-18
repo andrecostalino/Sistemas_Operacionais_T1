@@ -18,7 +18,7 @@ O jogo possui duas regiões críticas nas quais podem ocorrer condições de cor
 ### Lock
 A solução por lock consite na criação de dois locks no princípio do jogo, o lock dos ingredientes e o da pontuação
 
-'''bash
+```bash
 lock_ingrediente = threading.Lock()
 lock_pontuacao = threading.Lock()
-'''
+```
