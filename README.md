@@ -8,7 +8,7 @@ Ele consiste numa competição entre dois cozinheiros que trabalham em um restau
 - Burrito: Feijão, Queijo e Carne
 - Hámburguer: Pão, Queijo e Carne
 - Salada: Alface, Tomate e Queijo
-- 
+
 ## Condições de Corrida
 O jogo possui duas regiões críticas nas quais podem ocorrer condições de corrida, a dispensa compartilhada e a lista com as pontuações dos jogadores. Esses espaços não podem ser acessados simultaneamente, para que não ocorra nenhuma coleta ou escrita de dados equivocados nelas. As condições de corrida foram solucionadas de três formas diferentes: 
 1.Lock
