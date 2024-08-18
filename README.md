@@ -132,8 +132,16 @@ Para que o jogo funcione em sua máquina, é necessário que esteja instalada al
 
 ```bash
 git clone https://github.com/andrecostalino/Sistemas_Operacionais_T1
+```
+```bash
 cd .\Sistemas_Operacionais_T1\
+```
+```bash
 python .\Jogo_Exclusao_Mutua.py
+```
+```bash
 python .\Jogo_Monitor.py
+```
+```bash
 python .\Jogo_Semaforo.py
 ```
