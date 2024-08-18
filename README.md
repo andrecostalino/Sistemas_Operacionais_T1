@@ -22,3 +22,19 @@ A solução por lock consite na criação de dois locks no princípio do jogo, o
 lock_ingrediente = threading.Lock()
 lock_pontuacao = threading.Lock()
 ```
+Para que sejam acessadas a dispensa e a lista de pontuação é necessário estar em posse de sua respectiva lock. Essas tentativas de capturá-la ocorrem nos momentos em que um ingrediente será coletado, reposto ou uma ordem será concluída. No exemplo abaixo pode ser visto o funcionamento dela no momento em que o jogo tenta reabastecar a dispensa de ingredientes:
+
+```python
+def reposicao():
+    # Reabastecimento dos ingredientes (Neste momento a dispensa também é regulada por um semáforo)
+    with lock_ingrediente:
+        for ingrediente in Ingredientes:
+            dispensa[ingrediente] = dispensa_cheia
+        print("Ingredientes reabastecidos.")
+```
+Após a conclusão do processo, a lock é automaticamente liberada e fica, novamente, a disposição.
+
+### Semáforo
+Funciona de uma maneira muito similar a lock em relação a sua necessidade para manipulação da dispensa e lista de pontuação. Possui uma classe específica para ele, na qual podem ser encontrador os métodos para captura e liberação do semáforo, como pode ser visto abaixo
+
+
