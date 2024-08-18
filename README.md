@@ -16,9 +16,9 @@ O jogo possui duas regiões críticas nas quais podem ocorrer condições de cor
 3.Monitor
   
 ### Lock
-A solução por lock consite na criação de dois locks no princípio do jogo, o lock dos ingredientes e o da pontuação
+A solução por lock consite na criação de duas locks no princípio do jogo, o lock dos ingredientes e o da pontuação. Essas locks são provenientes da função Lock da biblioteca threading, nativa do Python.
 
-```bash
+```python
 lock_ingrediente = threading.Lock()
 lock_pontuacao = threading.Lock()
 ```
@@ -37,4 +37,103 @@ Após a conclusão do processo, a lock é automaticamente liberada e fica, novam
 ### Semáforo
 Funciona de uma maneira muito similar a lock em relação a sua necessidade para manipulação da dispensa e lista de pontuação. Possui uma classe específica para ele, na qual podem ser encontrador os métodos para captura e liberação do semáforo, como pode ser visto abaixo
 
+```python
+class Semaforo:
+    def __init__(self, inicial):
+        self.sinal = inicial
+        self.threads = collections.deque()
+    #Espera pela liberação
+    def espera_condicional(self):
+        while self.sinal == 0:
+            time.sleep(0.01)
+    #Captura do semáforo pela thread
+    def captura(self):
+        while True:
+            self.espera_condicional()
+            if self.sinal > 0:
+                self.sinal -= 1
+                return
+            else:
+                self.threads.append(threading.current_thread())
+                while threading.current_thread() in self.threads:
+                    time.sleep(0.01)
+    #Liberação do semáforo pela thread
+    def liberacao(self):
+        self.sinal += 1
+        if self.threads:
+            self.threads.popleft()
+```
 
+```python
+def reposicao():
+    semaforo_ingredientes.captura()
+    for ingrediente in Ingredientes:
+        dispensa[ingrediente] = dispensa_cheia
+    print("Ingredientes reabastecidos.")
+    semaforo_ingredientes.liberacao()
+```
+
+### Monitor
+Funciona de forma muito similar aos anteriores em relação ao seu comportamento com as regiões críticas e, assim como o semáforo, precisa de uma classe para ser utilizado. Para implementação de seus recursos de espera pela liberação e da notificação as outras threads de quando este foi liberado, foi utilizada a função Condition() da biblioteca threading.
+
+```python
+#Classe Monitor
+class Monitor:
+    def __init__(self):
+        self.ocupado = False
+        self.monitor = threading.Condition()
+    #Funções de captura e liberação da classe monitor
+    def captura(self):
+        with self.monitor:
+            while self.ocupado:
+                self.monitor.wait()
+            self.ocupado = True
+    def liberacao(self):
+        with self.monitor:
+            self.ocupado = False
+            self.monitor.notify()
+```
+
+```python
+def reposicao():
+    monitor_ingredientes.captura()
+    for ingrediente in Ingredientes:
+        dispensa[ingrediente] = dispensa_cheia
+    print("Ingredientes reabastecidos.")
+    monitor_ingredientes.liberacao()
+```
+
+## Jogadores
+Ambos os jogadores estão sendo simulados nesse jogo por meio de threads. Elas são implementadas a partir da função Thread() da biblioteca threading e são nelas em que as funções de coleta de ingredientes e compleção de pedidos são chamadas, além das devidas manipulações da dispensa e estoque intenor de ingredientes de cada jogador.
+
+```python
+def thread_jogador(id_jogador, ingredientes_jogador):
+    #Thread jogador
+    ls_ingrediente = 0
+    ls_pedidos = 0
+    while True:
+        # Simular coleta de ingredientes
+        ingrediente = script_ingredientes[ls_ingrediente].rstrip('\n')
+        ls_ingrediente += 1
+        coleta_ingredientes(ingredientes_jogador, ingrediente, id_jogador)
+        if 3 in pontuacao_jogadores:
+            break
+        # Tentar completar um pedido
+        completar_pedido(id_jogador, ingredientes_jogador, ls_pedidos)
+        if ls_pedidos <= 1:
+            ls_pedidos += 1
+        else:
+            ls_pedidos = 0
+        time.sleep(0.1)  # Simular tempo de ação do jogador
+```
+
+## Utilização do jogo
+Para que o jogo funcione em sua máquina, é necessário que esteja instalada alguma versão da linguagem Python. A partir disso, basta que sejam executados os seguintes comandos:
+
+```bash
+git clone https://github.com/andrecostalino/Sistemas_Operacionais_T1
+cd .\Sistemas_Operacionais_T1\
+python .\Jogo_Exclusao_Mutua.py
+python .\Jogo_Monitor.py
+python .\Jogo_Semaforo.py
+```
