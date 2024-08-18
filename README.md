@@ -3,7 +3,7 @@ Esse trabalho consiste em um jogo no qual ocorre condições de corrida que são
 
 ## Vídeo Execução do Jogo
 
-[![Drawing-Recognition-Model](https://drive.google.com/file/d/1fsVVw9y0tIyq87rE7STVBvSgw9dCU8UV/view?usp=sharing)]
+https://drive.google.com/file/d/1fsVVw9y0tIyq87rE7STVBvSgw9dCU8UV/view?usp=drive_link
 
 ## O Jogo
 Ele consiste numa competição entre dois cozinheiros que trabalham em um restaurante. Ambos tem como objetivo completar o máximo de pratos possível dentre os que estão presentes no cardápio do restaurante. Os cozinheiros dividem a mesma dispensa, e essa não pode ser acessada por ambos simultaneamente, logo parte da competição é a utilização eficiente do tempo e ingredientes a disposição para atingir o objetivo de três pontos antes do oponenete, vencendo o jogo.
